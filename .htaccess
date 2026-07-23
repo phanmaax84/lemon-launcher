@@ -1,0 +1,48 @@
+RewriteEngine On
+
+# Handle all GD API endpoints
+RewriteRule ^database/accounts/loginGJAccount\.php$ database/accounts/loginGJAccount.php [L]
+RewriteRule ^database/accounts/registerGJAccount\.php$ database/accounts/registerGJAccount.php [L]
+RewriteRule ^database/accounts/syncGJAccount\.php$ database/accounts/syncGJAccount.php [L]
+RewriteRule ^database/gj/getGJLevels21\.php$ database/gj/getGJLevels21.php [L]
+RewriteRule ^database/gj/downloadGJLevel22\.php$ database/gj/downloadGJLevel22.php [L]
+RewriteRule ^database/gj/uploadGJLevel21\.php$ database/gj/uploadGJLevel21.php [L]
+RewriteRule ^database/gj/getGJUserInfo19\.php$ database/gj/getGJUserInfo19.php [L]
+RewriteRule ^database/gj/updateGJUserScore22\.php$ database/gj/updateGJUserScore22.php [L]
+RewriteRule ^database/gj/uploadGJComment21\.php$ database/gj/uploadGJComment21.php [L]
+RewriteRule ^database/gj/getGJComments21\.php$ database/gj/getGJComments21.php [L]
+RewriteRule ^database/gj/likeGJItem211\.php$ database/gj/likeGJItem211.php [L]
+RewriteRule ^database/gj/rateGJStars211\.php$ database/gj/rateGJStars211.php [L]
+RewriteRule ^database/gj/rateGJDemon21\.php$ database/gj/rateGJDemon21.php [L]
+RewriteRule ^database/gj/deleteGJLevelUser21\.php$ database/gj/deleteGJLevelUser21.php [L]
+RewriteRule ^database/gj/uploadGJMessage20\.php$ database/gj/uploadGJMessage20.php [L]
+RewriteRule ^database/gj/getGJMessages20\.php$ database/gj/getGJMessages20.php [L]
+RewriteRule ^database/gj/uploadFriendRequest20\.php$ database/gj/uploadFriendRequest20.php [L]
+RewriteRule ^database/gj/getGJFriendRequests20\.php$ database/gj/getGJFriendRequests20.php [L]
+RewriteRule ^database/gj/getGJDailyLevel\.php$ database/gj/getGJDailyLevel.php [L]
+RewriteRule ^database/gj/getGJGauntlets21\.php$ database/gj/getGJGauntlets21.php [L]
+RewriteRule ^database/gj/getGJMapPacks\.php$ database/gj/getGJMapPacks.php [L]
+RewriteRule ^database/gj/getGJSongInfo\.php$ database/gj/getGJSongInfo.php [L]
+RewriteRule ^database/gj/getGJSongs21\.php$ database/gj/getGJSongs21.php [L]
+RewriteRule ^database/gj/getGJUsers\.php$ database/gj/getGJUsers.php [L]
+RewriteRule ^database/gj/blockGJUser20\.php$ database/gj/blockGJUser20.php [L]
+RewriteRule ^database/gj/requestUserAccess\.php$ database/gj/requestUserAccess.php [L]
+RewriteRule ^database/gj/getGJLevelScores\.php$ database/gj/getGJLevelScores.php [L]
+RewriteRule ^database/gj/suggestGJStars\.php$ database/gj/suggestGJStars.php [L]
+RewriteRule ^database/gj/getGJLevelLists\.php$ database/gj/getGJLevelLists.php [L]
+RewriteRule ^database/gj/unblockGJUser20\.php$ database/gj/unblockGJUser20.php [L]
+RewriteRule ^database/gj/updateGJDesc21\.php$ database/gj/updateGJDesc21.php [L]
+RewriteRule ^database/gj/deleteGJComment20\.php$ database/gj/deleteGJComment20.php [L]
+
+# Set proper headers for GD
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+    Header set Access-Control-Allow-Methods "POST, GET, OPTIONS"
+    Header set Access-Control-Allow-Headers "Content-Type"
+</IfModule>
+
+# Prevent directory listing
+Options -Indexes
+
+# Error documents
+ErrorDocument 404 /index.php

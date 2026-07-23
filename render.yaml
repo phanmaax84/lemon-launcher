@@ -1,0 +1,50 @@
+# Render deployment configuration
+services:
+  # Web service (PHP GDPS)
+  - type: web
+    name: lemon-gdps
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: lemon-gdps-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: lemon-gdps-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: lemon-gdps-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: lemon-gdps-db
+          property: user
+      - key: DB_PASS
+        fromDatabase:
+          name: lemon-gdps-db
+          property: password
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: SERVER_NAME
+        value: "Lemon GDPS"
+
+  # MySQL Database
+  - type: pserv
+    name: lemon-gdps-db
+    plan: free
+    runtime: docker
+    runtimeSource:
+      image: mysql:8.0
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        generateValue: true
+      - key: MYSQL_DATABASE
+        value: gdps
+    disk:
+      name: mysql-data
+      mountPath: /var/lib/mysql
+      sizeGB: 1
