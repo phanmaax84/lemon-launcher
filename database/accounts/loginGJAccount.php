@@ -1,66 +1,59 @@
 <?php
-// Login endpoint for GD
-require_once __DIR__ . '/../incl/lib.php';
-
 header('Content-Type: text/plain');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
+
+$host = getenv('DB_HOST');
+$port = getenv('DB_PORT') ?: '3306';
+$dbname = getenv('DB_NAME') ?: 'gdps';
+$user = getenv('DB_USER') ?: 'root';
+$pass = getenv('DB_PASS') ?: '';
+
+try {
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4",$user,$pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+} catch (Exception $e) { die('-1'); }
+
+function xorCipher($text, $key) {
+    $r = '';
+    for ($i = 0; $i < strlen($text); $i++) $r .= chr(ord($text[$i]) ^ ord($key[$i % strlen($key)]));
+    return $r;
+}
 
 $username = $_POST['userName'] ?? '';
 $password = $_POST['password'] ?? '';
-$udid = $_POST['udid'] ?? '';
-$sid = $_POST['sID'] ?? '';
 $gjp2 = $_POST['gjp2'] ?? '';
 
-if (empty($username) || (empty($password) && empty($gjp2))) {
-    die('-1');
-}
-
-$pdo = db();
-
-// Try GJP2 auth first
+if (empty($username)) die('-1');
 if (!empty($gjp2)) {
-    $decodedPass = xorCipher(base64_decode($gjp2), XOR_KEY_PASS);
-    if ($decodedPass) {
-        $password = $decodedPass;
+    $decoded = xorCipher(base64_decode($gjp2), '37526');
+    if ($decoded) $password = $decoded;
+}
+if (empty($password)) die('-1');
+
+try {
+    $stmt = $pdo->prepare("SELECT * FROM accounts WHERE userName = ?");
+    $stmt->execute([$username]);
+    $account = $stmt->fetch();
+    if (!$account) die('-1');
+    if (!password_verify($password, $account['password'])) die('-1');
+    if ($account['isBanned']) die('-1');
+
+    $userID = $account['userID'] ?: $account['accountID'];
+    if (!$account['userID']) {
+        $pdo->prepare("UPDATE accounts SET userID = ? WHERE accountID = ?")->execute([$userID, $account['accountID']]);
     }
-}
 
-// Check accounts table
-$stmt = $pdo->prepare("SELECT * FROM accounts WHERE userName = ?");
-$stmt->execute([$username]);
-$account = $stmt->fetch();
+    $userStmt = $pdo->prepare("SELECT * FROM users WHERE userID = ?");
+    $userStmt->execute([$userID]);
+    if (!$userStmt->fetch()) {
+        $pdo->prepare("INSERT INTO users (userID, userName) VALUES (?, ?)")->execute([$userID, $account['userName']]);
+    }
 
-if (!$account) {
+    echo $account['accountID'] . ',' . $userID;
+} catch (Exception $e) {
     die('-1');
 }
-
-if (!verifyGamePassword($password, $account['password'])) {
-    die('-1');
-}
-
-if ($account['isBanned']) {
-    die('-1');
-}
-
-// Make sure user exists
-$userID = $account['userID'];
-if (!$userID) {
-    $userID = $account['accountID'];
-    $stmt2 = $pdo->prepare("UPDATE accounts SET userID = ? WHERE accountID = ?");
-    $stmt2->execute([$userID, $account['accountID']]);
-}
-
-$userStmt = $pdo->prepare("SELECT * FROM users WHERE userID = ?");
-$userStmt->execute([$userID]);
-$user = $userStmt->fetch();
-
-if (!$user) {
-    // Create user profile
-    $stmt3 = $pdo->prepare("INSERT INTO users (userID, userName) VALUES (?, ?)");
-    $stmt3->execute([$userID, $account['userName']]);
-}
-
-// Update last played
-$pdo->prepare("UPDATE users SET lastPlayed = NOW() WHERE userID = ?")->execute([$userID]);
-
-// Response: accountID,userID
-echo $account['accountID'] . ',' . $userID;
