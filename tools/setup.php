@@ -1,16 +1,53 @@
 <?php
-require_once __DIR__ . '/../incl/lib.php';
-header('Content-Type: text/html; charset=utf-8');
-echo "<h2>🍋 GDPS Setup</h2>";
+$host = getenv('DB_HOST');
+$port = getenv('DB_PORT') ?: '3306';
+$dbname = getenv('DB_NAME') ?: 'gdps';
+$user = getenv('DB_USER') ?: 'root';
+$pass = getenv('DB_PASS') ?: '';
+echo "<pre>";
 try {
-    $pdo = db();
-    $tables = ['ratings','dailyFeatures','gauntlets','songs','friendRequests','messages','likes','comments','levels','accounts','users'];
-    if (getDbType() === 'mysql') $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
-    foreach ($tables as $t) { $pdo->exec("DROP TABLE IF EXISTS $t"); echo "DROP $t ✓<br>"; }
-    if (getDbType() === 'mysql') $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
-    runSetup();
-    echo "<p style='color:green'>✅ Готово! Все таблицы созданы.</p>";
-    echo "<a href='/index.php'>→ Панель управления</a>";
+    $pdo = new PDO("mysql:host=$host;port=$port;dbname=$dbname;charset=utf8mb4",$user,$pass);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    echo "Connected to MySQL OK\n\n";
+    $pdo->exec("SET FOREIGN_KEY_CHECKS=0");
+    $pdo->exec("DROP TABLE IF EXISTS ratings");
+    $pdo->exec("DROP TABLE IF EXISTS dailyFeatures");
+    $pdo->exec("DROP TABLE IF EXISTS gauntlets");
+    $pdo->exec("DROP TABLE IF EXISTS songs");
+    $pdo->exec("DROP TABLE IF EXISTS friendRequests");
+    $pdo->exec("DROP TABLE IF EXISTS messages");
+    $pdo->exec("DROP TABLE IF EXISTS likes");
+    $pdo->exec("DROP TABLE IF EXISTS comments");
+    $pdo->exec("DROP TABLE IF EXISTS levels");
+    $pdo->exec("DROP TABLE IF EXISTS accounts");
+    $pdo->exec("DROP TABLE IF EXISTS users");
+    echo "All old tables dropped\n\n";
+    $pdo->exec("CREATE TABLE users (userID INT AUTO_INCREMENT PRIMARY KEY, userName VARCHAR(255) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, email VARCHAR(255), isAdmin TINYINT DEFAULT 0, isBanned TINYINT DEFAULT 0, stars INT DEFAULT 0, diamonds INT DEFAULT 0, demons INT DEFAULT 0, creatorPoints INT DEFAULT 0, secretCoins INT DEFAULT 0, userCoins INT DEFAULT 0, icon INT DEFAULT 0, color1 INT DEFAULT 0, color2 INT DEFAULT 3, iconType INT DEFAULT 0, special INT DEFAULT 0, accIcon INT DEFAULT 0, accShip INT DEFAULT 0, accBall INT DEFAULT 0, accBird INT DEFAULT 0, accDart INT DEFAULT 0, accRobot INT DEFAULT 0, accGlow INT DEFAULT 0, accSpider INT DEFAULT 0, accExplosion INT DEFAULT 0, accSwing INT DEFAULT 0, accJetpack INT DEFAULT 0, friendState INT DEFAULT 0, messageState INT DEFAULT 0, commentState INT DEFAULT 0, blockedUsers TEXT, registerDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP, lastPlayed TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB");
+    echo "users OK\n";
+    $pdo->exec("CREATE TABLE accounts (accountID INT AUTO_INCREMENT PRIMARY KEY, userName VARCHAR(255) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, email VARCHAR(255), userID INT DEFAULT 0, isAdmin TINYINT DEFAULT 0, isBanned TINYINT DEFAULT 0, registerDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB");
+    echo "accounts OK\n";
+    $pdo->exec("CREATE TABLE levels (levelID INT AUTO_INCREMENT PRIMARY KEY, levelName VARCHAR(255) NOT NULL DEFAULT 'Unnamed', levelDescription TEXT, levelVersion INT DEFAULT 1, levelLength INT DEFAULT 0, audioTrack INT DEFAULT 0, auto TINYINT DEFAULT 0, password INT DEFAULT 0, original INT DEFAULT 0, twoPlayer TINYINT DEFAULT 0, songID INT DEFAULT 0, objects INT DEFAULT 0, coins INT DEFAULT 0, requestedStars INT DEFAULT 0, unlisted TINYINT DEFAULT 0, ldm TINYINT DEFAULT 0, isFeatured TINYINT DEFAULT 0, isEpic TINYINT DEFAULT 0, starStars INT DEFAULT 0, starDifficulty INT DEFAULT 0, starDemon INT DEFAULT 0, starDemonDiff INT DEFAULT 0, starAuto TINYINT DEFAULT 0, starCoins INT DEFAULT 0, starFeatured INT DEFAULT 0, downloads INT DEFAULT 0, likes INT DEFAULT 0, levelString LONGTEXT, uploadDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updateDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, uploadDateInt INT DEFAULT 0, updateDateInt INT DEFAULT 0, userID INT DEFAULT 0, extID VARCHAR(255), wt BIGINT DEFAULT 0, wt2 BIGINT DEFAULT 0, wt3 BIGINT DEFAULT 0) ENGINE=InnoDB");
+    echo "levels OK\n";
+    $pdo->exec("CREATE TABLE comments (commentID INT AUTO_INCREMENT PRIMARY KEY, userID INT DEFAULT 0, levelID INT DEFAULT 0, comment TEXT, likes INT DEFAULT 0, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB");
+    echo "comments OK\n";
+    $pdo->exec("CREATE TABLE likes (likeID INT AUTO_INCREMENT PRIMARY KEY, userID INT DEFAULT 0, itemID INT DEFAULT 0, type INT DEFAULT 0, isLike TINYINT DEFAULT 1, UNIQUE KEY ul(userID,itemID,type)) ENGINE=InnoDB");
+    echo "likes OK\n";
+    $pdo->exec("CREATE TABLE messages (messageID INT AUTO_INCREMENT PRIMARY KEY, senderID INT DEFAULT 0, receiverID INT DEFAULT 0, subject VARCHAR(255), body TEXT, isRead TINYINT DEFAULT 0, senderDelete TINYINT DEFAULT 0, receiverDelete TINYINT DEFAULT 0, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB");
+    echo "messages OK\n";
+    $pdo->exec("CREATE TABLE friendRequests (requestID INT AUTO_INCREMENT PRIMARY KEY, accountID INT DEFAULT 0, toAccountID INT DEFAULT 0, comment TEXT, isNew TINYINT DEFAULT 1, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY fr(accountID,toAccountID)) ENGINE=InnoDB");
+    echo "friendRequests OK\n";
+    $pdo->exec("CREATE TABLE songs (songID INT PRIMARY KEY, name VARCHAR(255), authorName VARCHAR(255), downloadURL TEXT, size VARCHAR(50) DEFAULT '0') ENGINE=InnoDB");
+    echo "songs OK\n";
+    $pdo->exec("CREATE TABLE gauntlets (gauntletID INT AUTO_INCREMENT PRIMARY KEY, level1 INT DEFAULT 0, level2 INT DEFAULT 0, level3 INT DEFAULT 0, level4 INT DEFAULT 0, level5 INT DEFAULT 0) ENGINE=InnoDB");
+    echo "gauntlets OK\n";
+    $pdo->exec("CREATE TABLE dailyFeatures (featureID INT AUTO_INCREMENT PRIMARY KEY, levelID INT DEFAULT 0, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, isWeekly TINYINT DEFAULT 0) ENGINE=InnoDB");
+    echo "dailyFeatures OK\n";
+    $pdo->exec("CREATE TABLE ratings (ratingID INT AUTO_INCREMENT PRIMARY KEY, userID INT DEFAULT 0, levelID INT DEFAULT 0, stars INT DEFAULT 0, demon INT DEFAULT 0, difficulty INT DEFAULT 0, auto INT DEFAULT 0, timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY ur(userID,levelID)) ENGINE=InnoDB");
+    echo "ratings OK\n";
+    $pdo->exec("SET FOREIGN_KEY_CHECKS=1");
+    echo "\n✅ ALL TABLES CREATED SUCCESSFULLY!\n";
+    echo "<a href='/index.php' style='color:lime;font-size:20px'>Go to admin panel →</a>";
 } catch (Exception $e) {
-    echo "<p style='color:red'>❌ " . $e->getMessage() . "</p>";
+    echo "ERROR: " . $e->getMessage();
 }
+echo "</pre>";
