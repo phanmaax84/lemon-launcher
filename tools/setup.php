@@ -1,27 +1,15 @@
 <?php
-// Setup script - run this to create database tables
 require_once __DIR__ . '/../incl/lib.php';
-
-echo "Setting up GDPS database...\n";
-
+echo "<h2>GDPS Setup</h2>";
 try {
+    $pdo = db();
+    $tables = ['ratings','dailyFeatures','gauntlets','songs','friendRequests','messages','likes','comments','levels','accounts','users'];
+    try { $pdo->exec("SET FOREIGN_KEY_CHECKS = 0"); } catch(Exception $e) {}
+    foreach ($tables as $t) { $pdo->exec("DROP TABLE IF EXISTS $t"); echo "DROP $t<br>"; }
+    try { $pdo->exec("SET FOREIGN_KEY_CHECKS = 1"); } catch(Exception $e) {}
     runSetup();
-    echo "✅ Database tables created successfully!\n";
-    echo "Tables created:\n";
-    echo "  - users (player profiles)\n";
-    echo "  - accounts (login accounts)\n";
-    echo "  - levels (uploaded levels)\n";
-    echo "  - comments (level/user comments)\n";
-    echo "  - likes (like tracking)\n";
-    echo "  - messages (private messages)\n";
-    echo "  - friendRequests (friend requests)\n";
-    echo "  - songs (custom songs)\n";
-    echo "  - gauntlets (gauntlet levels)\n";
-    echo "  - dailyFeatures (daily/weekly levels)\n";
-    echo "  - ratings (level ratings)\n\n";
-    echo "✅ GDPS is ready to play!\n";
-    echo "\nServer URL: " . getServerURL() . "\n";
-    echo "Admin Panel: " . getServerURL() . "/tools/admin.php\n";
+    echo "<h3 style='color:green'>OK! Tables created.</h3>";
+    echo "<a href='/index.php'>Go to admin panel</a>";
 } catch (Exception $e) {
-    echo "❌ Error: " . $e->getMessage() . "\n";
+    echo "<h3 style='color:red'>ERROR: " . $e->getMessage() . "</h3>";
 }
